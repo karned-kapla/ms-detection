@@ -13,7 +13,7 @@ WORKDIR /app
 
 RUN useradd -m worker
 
-COPY requirements.txt main.py ./
+COPY requirements.txt main.py config.json ./
 COPY src src
 
 RUN pip install --no-cache-dir -r requirements.txt
