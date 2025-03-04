@@ -5,7 +5,7 @@ from confluent_kafka import Consumer, KafkaError
 from src.yolo_detection import url_file_prediction
 
 
-class KafkaConsumerClient:
+class KafkaConsumer:
     def __init__( self, config ):
         self.config = config
         self.topic = config['topic']
@@ -47,7 +47,9 @@ class KafkaConsumerClient:
                     logging.info(f"Message reçu: {data}")
 
                     result = url_file_prediction(data['url'], data['model_name'])
-                    logging.info(f"Message reçu: {result}")
+                    logging.info(f"Résultat: {result}")
+
+
 
                 except json.JSONDecodeError as e:
                     logging.error(f"Erreur de décodage JSON: {e} - Message brut: {raw_value}")
