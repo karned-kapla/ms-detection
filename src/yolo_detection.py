@@ -3,12 +3,7 @@ from ultralytics import YOLO
 import cv2
 import numpy as np
 
-from src.models.output import Box, ClassInfo, ClassReport, DetectionResult
-
-from fastapi import HTTPException
-from google.cloud import storage
-import boto3
-from botocore.exceptions import BotoCoreError, ClientError
+from src.models.output import DetectionResult
 
 
 def load_model( model_name: str ) -> YOLO:
@@ -79,47 +74,6 @@ def treat_image( image_bytes: bytes ) -> np.ndarray:
     return image
 
 
-def download_image_from_bucket( uri: str ) -> bytes:
-    if uri.startswith("gs://"):
-        return download_image_from_gcs(uri)
-    elif uri.startswith("s3://"):
-        return download_image_from_s3(uri)
-    else:
-        raise ValueError("L'URI doit commencer par 'gs://' pour GCS ou 's3://' pour S3")
-
-
-def download_image_from_gcs( gcs_uri: str ) -> bytes:
-    try:
-        if gcs_uri.startswith("gs://"):
-            gcs_uri = gcs_uri[5:]
-        bucket_name, blob_path = gcs_uri.split('/', 1)
-
-        storage_client = storage.Client()
-        bucket = storage_client.bucket(bucket_name)
-        blob = bucket.blob(blob_path)
-
-        image_bytes = blob.download_as_bytes()
-        return image_bytes
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur lors de la récupération de l'image : {str(e)}")
-
-
-def download_image_from_s3( s3_uri: str ) -> bytes:
-    try:
-        if s3_uri.startswith("s3://"):
-            s3_uri = s3_uri[5:]
-        bucket_name, object_key = s3_uri.split("/", 1)
-
-        s3_client = boto3.client("s3")
-
-        response = s3_client.get_object(Bucket=bucket_name, Key=object_key)
-        image_bytes = response["Body"].read()
-
-        return image_bytes
-    except (BotoCoreError, ClientError) as e:
-        raise HTTPException(status_code=500, detail=f"Erreur lors de la récupération de l'image : {str(e)}")
-
-
 def prediction( image_bytes: bytes, model_name: str ) -> DetectionResult:
     image = treat_image(image_bytes)
     model = load_model(model_name)
@@ -134,11 +88,6 @@ def prediction( image_bytes: bytes, model_name: str ) -> DetectionResult:
     )
 
     return detection_result
-
-
-def uri_file_prediction( uri: str, model_name: str ) -> DetectionResult:
-    image_bytes = download_image_from_bucket(uri)
-    return prediction(image_bytes, model_name)
 
 
 def url_file_prediction( url: str, model_name: str ) -> DetectionResult:
