@@ -1,3 +1,5 @@
+import logging
+
 import requests
 from ultralytics import YOLO
 import cv2
@@ -75,6 +77,8 @@ def treat_image( image_bytes: bytes ) -> np.ndarray:
 
 
 def prediction( image_bytes: bytes, model_name: str ) -> DetectionResult:
+    logging.info(f"call to prediction with model_name: {model_name}")
+
     image = treat_image(image_bytes)
     model = load_model(model_name)
     results = model.predict(image)

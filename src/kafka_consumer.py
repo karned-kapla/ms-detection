@@ -2,6 +2,7 @@ import json
 import logging
 from confluent_kafka import Consumer, KafkaError
 
+from src.treat import treat
 from src.yolo_detection import url_file_prediction
 
 
@@ -46,10 +47,7 @@ class KafkaConsumer:
                     data = json.loads(decoded_value)
                     logging.info(f"Message reçu: {data}")
 
-                    result = url_file_prediction(data['url'], data['model_name'])
-                    logging.info(f"Résultat: {result}")
-
-
+                    treat(data)
 
                 except json.JSONDecodeError as e:
                     logging.error(f"Erreur de décodage JSON: {e} - Message brut: {raw_value}")
