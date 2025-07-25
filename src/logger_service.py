@@ -1,6 +1,6 @@
 import logging
 import sys
-from config import LOG_LEVEL, API_NAME
+from config import LOG_LEVEL, MS_NAME
 
 
 class Logger:
@@ -45,7 +45,7 @@ class Logger:
         'RUNNING': '🏃',
     }
 
-    def __init__(self, app_name=API_NAME):
+    def __init__(self, app_name=MS_NAME):
         self.app_name = app_name
         log_level_name = LOG_LEVEL.upper()
         log_level = getattr(logging, log_level_name, logging.INFO)

@@ -8,8 +8,8 @@ import numpy as np
 from src.models.output import DetectionResult
 
 
-def load_model( model_name: str ) -> YOLO:
-    return YOLO(f"models/{model_name}.pt")
+def load_model(model: str) -> YOLO:
+    return YOLO(f"models/{model}.pt")
 
 
 def add_shape( image: np.ndarray, datas: dict ) -> dict:
@@ -76,11 +76,11 @@ def treat_image( image_bytes: bytes ) -> np.ndarray:
     return image
 
 
-def prediction( image_bytes: bytes, model_name: str ) -> DetectionResult:
-    logging.info(f"call to prediction with model_name: {model_name}")
+def prediction(image_bytes: bytes, model: str) -> DetectionResult:
+    logging.info(f"call to prediction with model: {model}")
 
     image = treat_image(image_bytes)
-    model = load_model(model_name)
+    model = load_model(model)
     results = model.predict(image)
     datas = construct_datas(model=model, results=results, image=image)
 
@@ -94,6 +94,6 @@ def prediction( image_bytes: bytes, model_name: str ) -> DetectionResult:
     return detection_result
 
 
-def url_file_prediction( url: str, model_name: str ) -> DetectionResult:
+def url_file_prediction(url: str, model: str) -> DetectionResult:
     image_bytes = requests.get(url).content
-    return prediction(image_bytes, model_name)
+    return prediction(image_bytes = image_bytes, model = model)

@@ -12,10 +12,29 @@ class MessageProcessor:
         value = message.value().decode("utf-8")
         data = json.loads(value)
 
-        result = url_file_prediction(data['url'], data['model_name'])
+        if data["model"] == "object":
+            data["model"] = "yolo11l"
+
+        if data["model"] not in ["yolo11l", "yolo11m", "yolo11n", "yolo11x", "yolov8n"]:
+            self.logger.error(f"Model not supported: {data['model']}")
+            raise ValueError("Model not supported !")
+
+        result = url_file_prediction(url = data['url'], model = data['model'])
         result = result.model_dump()
 
         self.logger.debug(result)
+
+        if data["response"]["canal"] == "api":
+            self.logger.api(f"Envoyé à l'API. Result : {data["response"]["url"]}")
+            result = {
+                "uuid": data["uuid"],
+                "secret": data["secret"],
+                "model": data["model"],
+                "result": result
+            }
+            response = requests.put(data["response"]["url"], json = result, timeout = 10)
+
+            self.logger.info(response.json())
 
         return result
 

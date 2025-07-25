@@ -1,7 +1,7 @@
 import os
 
 # API Configuration
-API_NAME = os.environ.get('API_NAME', 'ms-detection')
+MS_NAME = os.environ.get('MS_NAME', 'ms-detection')
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 
 # Kafka Configuration

@@ -21,16 +21,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN useradd -m worker
 
 COPY requirements.txt main.py ./
+COPY config config
 COPY src src
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-RUN mkdir -p /app/models && \
-    curl -L -o /app/models/yolo11n.pt https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n.pt && \
-    curl -L -o /app/models/yolo11s.pt https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11s.pt && \
-    curl -L -o /app/models/yolo11m.pt https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11m.pt && \
-    curl -L -o /app/models/yolo11l.pt https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11l.pt && \
-    curl -L -o /app/models/yolo11x.pt https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11x.pt
+COPY models models
 
 RUN chown -R worker:worker /app
 

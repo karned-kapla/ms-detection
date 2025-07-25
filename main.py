@@ -1,7 +1,7 @@
 import sys
 import traceback
 
-from config import API_NAME
+from config import MS_NAME
 from src.app import WorkerApp
 from src.dlq_handler import DLQHandler
 from src.kafka_client import KafkaClient
@@ -13,7 +13,7 @@ logger = Logger()
 
 
 def main():
-    logger.start(f"Starting {API_NAME} Service")
+    logger.start(f"Starting {MS_NAME} Service")
     signal_handler = SignalHandler()
     kafka_client = KafkaClient(logger = logger)
     message_processor = MessageProcessor(logger = logger)
