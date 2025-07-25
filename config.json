@@ -1,6 +1,0 @@
-{
-  "bootstrap_servers": "kafka:9092",
-  "group_id": "ms-object-detection",
-  "auto_offset_reset": "earliest",
-  "topic": "object-detection"
-}

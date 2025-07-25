@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN useradd -m worker
 
-COPY requirements.txt main.py config.json ./
+COPY requirements.txt main.py ./
 COPY src src
 
 RUN pip install --no-cache-dir -r requirements.txt

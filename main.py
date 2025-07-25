@@ -1,17 +1,40 @@
-import logging
+import sys
+import traceback
 
-from src.config_loader import load_config
-from src.kafka_consumer import KafkaConsumer
-from src.models.signal_handler import SignalHandler
+from config import API_NAME
+from src.app import WorkerApp
+from src.dlq_handler import DLQHandler
+from src.kafka_client import KafkaClient
+from src.logger_service import Logger
+from src.message_processor import MessageProcessor
+from src.signal_handler import SignalHandler
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logger = Logger()
 
 
 def main():
-    config = load_config()
+    logger.start(f"Starting {API_NAME} Service")
     signal_handler = SignalHandler()
-    consumer = KafkaConsumer(config)
-    consumer.consume_messages(signal_handler)
+    kafka_client = KafkaClient(logger = logger)
+    message_processor = MessageProcessor(logger = logger)
+    dlq_handler = DLQHandler(producer = kafka_client.get_producer(), logger = logger)
+    app = WorkerApp(
+        kafka_client = kafka_client,
+        message_processor = message_processor,
+        dlq_handler = dlq_handler,
+        signal_handler = signal_handler,
+        logger = logger
+    )
+
+    try:
+        success = app.run()
+        if not success:
+            logger.failure("Exception during launch")
+            sys.exit(1)
+    except Exception as e:
+        logger.failure(f"Exception non gérée: {e}")
+        logger.error(traceback.format_exc())
+        sys.exit(1)
 
 
 if __name__ == "__main__":
