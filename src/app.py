@@ -27,7 +27,7 @@ class WorkerApp:
         start_time = time.time()
         messages_processed = 0
 
-        while self.signal_handler.is_running():
+        while self.signal_handler.is_running:
             try:
                 msg = self.kafka_client.poll_message(1.0)
 
