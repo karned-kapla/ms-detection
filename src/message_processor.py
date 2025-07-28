@@ -22,19 +22,15 @@ class MessageProcessor:
         result = url_file_prediction(url = data['url'], model = data['model'])
         result = result.model_dump()
 
-        self.logger.debug(result)
-
         if data["response"]["canal"] == "api":
-            self.logger.api(f"Envoyé à l'API. Result : {data["response"]["url"]}")
-            result = {
+            self.logger.api(f"Envoyé à l'API : {data["response"]["url"]}")
+            payload = {
                 "uuid": data["uuid"],
                 "secret": data["secret"],
                 "model": data["model"],
                 "result": result
             }
-            response = requests.put(data["response"]["url"], json = result, timeout = 10)
-
-            self.logger.info(response.json())
+            requests.put(data["response"]["url"], json = payload, timeout = 10)
 
         return result
 
