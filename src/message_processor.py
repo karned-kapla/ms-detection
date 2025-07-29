@@ -1,6 +1,7 @@
 import json
 import requests
 
+from src.kafka_client import KafkaClient
 from src.yolo_detection import url_file_prediction
 
 
@@ -22,23 +23,20 @@ class MessageProcessor:
         result = url_file_prediction(url = data['url'], model = data['model'])
         result = result.model_dump()
 
-        if data["response"]["canal"] == "api":
-            self.logger.api(f"Envoyé à l'API : {data["response"]["url"]}")
-            payload = {
-                "uuid": data["uuid"],
-                "secret": data["secret"],
-                "model": data["model"],
-                "result": result
-            }
-            requests.put(data["response"]["url"], json = payload, timeout = 10)
+        payload = {
+            "uuid": data["uuid"],
+            "secret": data["secret"],
+            "model": data["model"],
+            "result": result
+        }
+
+        for response_item in data["response"]:
+            if response_item["canal"] == "api":
+                self.logger.api(f"Envoyé à l'API : {response_item['url']}")
+                requests.put(url = response_item["url"], json = payload, timeout = 10)
+            elif response_item["canal"] == "kafka":
+                self.logger.info(f"Message sent to Kafka topic: {response_item['topic']}")
+                kafka_client = KafkaClient(self.logger)
+                kafka_client.send_message(topic = response_item['topic'], message = payload)
 
         return result
-
-        # response = requests.post(LOAD_API_URL, json=data, timeout=10)
-
-        # if not response.ok:
-        # raise ValueError(f"Erreur HTTP: {response.status_code} - {response.text}")
-
-        # self.logger.api(f"Envoyé à l'API. Result : {response.json()}")
-
-        # return response.json()

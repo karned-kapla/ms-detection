@@ -48,6 +48,15 @@ class KafkaClient:
     def commit_message(self, message):
         self.consumer.commit(message)
 
+    def send_message(self, topic, message):
+        try:
+            self.producer.produce(topic = topic, key = 'file', value = str(message))
+            self.producer.flush()
+            self.logger.info(f"Message sent to Kafka topic '{self.topic}': {message}")
+        except Exception as e:
+            self.logger.error(f"Failed to send message to Kafka: {e}")
+            raise KafkaException(f"Failed to send message: {e}")
+
     def connect_with_retries(self):
         retry_count = 0
 
