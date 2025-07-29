@@ -52,7 +52,7 @@ class KafkaClient:
         try:
             self.producer.produce(topic = topic, key = 'file', value = str(message))
             self.producer.flush()
-            self.logger.info(f"Message sent to Kafka topic '{self.topic}': {message}")
+            self.logger.info(f"Message sent to Kafka topic '{self.topic}'")
         except Exception as e:
             self.logger.error(f"Failed to send message to Kafka: {e}")
             raise KafkaException(f"Failed to send message: {e}")
