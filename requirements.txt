@@ -4,8 +4,7 @@ numpy~=1.26.4
 ultralytics~=8.3.66
 requests~=2.32.2
 pydantic~=2.10.6
-
-dlib~=19.24.6
-mediapipe~=0.10.18
+insightface~=0.7.3
 pytest~=8.3.4
 scipy~=1.14.1
+onnxruntime

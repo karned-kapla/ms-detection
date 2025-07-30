@@ -1,11 +1,8 @@
 import cv2
-import dlib
-import mediapipe as mp
 import numpy as np
-import os
-
 import time
 import requests
+from insightface.app import FaceAnalysis
 
 from src.models.output import DetectionResult, Speed, Box, ClassReport
 
@@ -18,23 +15,21 @@ def load_image(image_path) -> np.ndarray:
 
 
 class FaceDetection:
-    def __init__(
-            self, face_rec_model_path='models/dlib_face_recognition_resnet_model_v1.dat'
-    ):
-        face_rec_model_path = os.path.abspath(face_rec_model_path)
-
-        self.face_rec_model = dlib.face_recognition_model_v1(face_rec_model_path)
-        self.mp_face_detection = mp.solutions.face_detection.FaceDetection(min_detection_confidence = 0.5)
+    def __init__(self):
+        # Initialize InsightFace model with more comprehensive analysis
+        self.face_analyzer = FaceAnalysis(providers = ['CPUExecutionProvider'],
+                                          allowed_modules = ['detection', 'recognition', 'genderage'])
+        self.face_analyzer.prepare(ctx_id = 0, det_size = (640, 640))
 
     def detect_faces(self, image):
         # Timing for preprocessing
         preprocess_start = time.time()
-        rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        # InsightFace works with BGR images (OpenCV default), so no conversion needed
         preprocess_time = (time.time() - preprocess_start) * 1000  # Convert to milliseconds
 
         # Timing for inference
         inference_start = time.time()
-        results = self.mp_face_detection.process(rgb_image)
+        faces = self.face_analyzer.get(image)
         inference_time = (time.time() - inference_start) * 1000  # Convert to milliseconds
 
         # Timing for postprocessing
@@ -45,23 +40,26 @@ class FaceDetection:
         classes = {}
 
         # Add face class info
-        face_class_id = 1
+        face_class_id = 0
         face_class_name = "face"
         classes[face_class_id] = ClassReport(class_name = face_class_name, count = 0)
 
-        if results.detections:
-            for detection in results.detections:
+        if len(faces) > 0:
+            for face in faces:
                 # Get bounding box
-                bbox = detection.location_data.relative_bounding_box
-                h, w, _ = image.shape
+                bbox = face.bbox.astype(int)
+                xmin, ymin, xmax, ymax = bbox
 
-                # Convert relative coordinates to absolute
-                xmin = max(0, bbox.xmin * w)
-                ymin = max(0, bbox.ymin * h)
-                width = bbox.width * w
-                height = bbox.height * h
-                xmax = min(w, xmin + width)
-                ymax = min(h, ymin + height)
+                # Create additional info dictionary with InsightFace data
+                additional_info = {
+                    "gender": getattr(face, "gender", None),
+                    "age": float(attr) if (attr := getattr(face, "age", None)) is not None else None,
+                    "embedding": attr.tolist() if (attr := getattr(face, "embedding", None)) is not None else None,
+                    "kps": attr.tolist() if (attr := getattr(face, "kps", None)) is not None else None,
+                    "landmark_3d_68": attr.tolist() if (attr := getattr(face, "landmark_3d_68",
+                                                                        None)) is not None else None,
+                    "pose": attr.tolist() if (attr := getattr(face, "pose", None)) is not None else None
+                }
 
                 # Add box to the list
                 boxes.append(Box(
@@ -69,9 +67,10 @@ class FaceDetection:
                     ymin = float(ymin),
                     xmax = float(xmax),
                     ymax = float(ymax),
-                    confidence = float(detection.score[0]),
+                    confidence = float(face.det_score),
                     predicted_class = face_class_id,
-                    name = face_class_name
+                    name = face_class_name,
+                    additional_info = additional_info
                 ))
 
                 # Increment face count
@@ -108,4 +107,5 @@ class FaceDetection:
         return self.detect_faces(image)
 
     def close(self):
-        self.mp_face_detection.close()
+        # InsightFace doesn't require explicit cleanup
+        pass

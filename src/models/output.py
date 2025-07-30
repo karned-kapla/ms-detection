@@ -16,6 +16,7 @@ class Box(BaseModel):
     confidence: float
     predicted_class: int
     name: str
+    additional_info: Dict = None
 
 
 class ClassReport(BaseModel):

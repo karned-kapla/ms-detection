@@ -1,9 +1,28 @@
 import json
 import requests
+import numpy as np
 
 from src.face_detection import FaceDetection
 from src.kafka_client import KafkaClient
 from src.yolo_detection import url_file_prediction
+
+
+def convert_numpy_types(obj):
+    """
+    Recursively convert numpy types to standard Python types for JSON serialization.
+    """
+    if isinstance(obj, np.integer):
+        return int(obj)
+    elif isinstance(obj, np.floating):
+        return float(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif isinstance(obj, dict):
+        return {key: convert_numpy_types(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_numpy_types(item) for item in obj]
+    else:
+        return obj
 
 
 class MessageProcessor:
@@ -37,6 +56,9 @@ class MessageProcessor:
             "result": result
         }
 
+        # Convert NumPy types to standard Python types for JSON serialization
+        payload = convert_numpy_types(payload)
+
         for response_item in data["response"]:
             if response_item["canal"] == "api":
                 self.logger.api(f"Envoyé à l'API : {response_item['url']}")
@@ -46,4 +68,5 @@ class MessageProcessor:
                 kafka_client = KafkaClient(self.logger)
                 kafka_client.send_message(topic = response_item['topic'], message = payload)
 
-        return result
+        # Also convert the returned result for consistency
+        return convert_numpy_types(result)
