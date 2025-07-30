@@ -4,6 +4,12 @@ import time
 import requests
 from insightface.app import FaceAnalysis
 
+from config.config import (
+    FACE_ANALYZER_PROVIDERS, FACE_ANALYZER_ALLOWED_MODULES,
+    FACE_ANALYZER_CTX_ID, FACE_ANALYZER_DET_SIZE_WIDTH,
+    FACE_ANALYZER_DET_SIZE_HEIGHT, FACE_ANALYZER_MODEL
+)
+from src.utils.env_utils import parse_list_from_env
 from src.models.output import DetectionResult, Speed, Box, ClassReport
 
 
@@ -15,11 +21,17 @@ def load_image(image_path) -> np.ndarray:
 
 
 class FaceDetection:
-    def __init__(self):
+    def __init__(self, model_name=None):
         # Initialize InsightFace model with more comprehensive analysis
-        self.face_analyzer = FaceAnalysis(providers = ['CPUExecutionProvider'],
-                                          allowed_modules = ['detection', 'recognition', 'genderage'])
-        self.face_analyzer.prepare(ctx_id = 0, det_size = (640, 640))
+        self.face_analyzer = FaceAnalysis(
+            providers = parse_list_from_env(FACE_ANALYZER_PROVIDERS),
+            allowed_modules = parse_list_from_env(FACE_ANALYZER_ALLOWED_MODULES),
+            name = model_name or FACE_ANALYZER_MODEL
+        )
+        self.face_analyzer.prepare(
+            ctx_id = FACE_ANALYZER_CTX_ID,
+            det_size = (FACE_ANALYZER_DET_SIZE_WIDTH, FACE_ANALYZER_DET_SIZE_HEIGHT)
+        )
 
     def detect_faces(self, image):
         # Timing for preprocessing

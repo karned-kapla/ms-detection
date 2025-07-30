@@ -2,10 +2,10 @@ import json
 import requests
 import numpy as np
 
+from config.config import OBJECT_DETECTION_MODEL, FACE_ANALYZER_MODEL, AVAILABLE_FACE_MODELS, AVAILABLE_OBJECT_MODELS
 from src.face_detection import FaceDetection
 from src.kafka_client import KafkaClient
 from src.yolo_detection import url_file_prediction
-
 
 def convert_numpy_types(obj):
     """
@@ -34,14 +34,19 @@ class MessageProcessor:
         data = json.loads(value)
 
         if data["model"] == "object":
-            data["model"] = "yolo11l"
+            data["model"] = OBJECT_DETECTION_MODEL
 
-        if data["model"] not in ["yolo11l", "yolo11m", "yolo11n", "yolo11x", "yolov8n", "face"]:
+        if data["model"] == "face":
+            data["model"] = FACE_ANALYZER_MODEL
+
+        is_face_model = data["model"] in AVAILABLE_FACE_MODELS
+
+        if not is_face_model and data["model"] not in AVAILABLE_OBJECT_MODELS:
             self.logger.error(f"Model not supported: {data['model']}")
             raise ValueError("Model not supported !")
 
-        if data["model"] == "face":
-            face_encoder = FaceDetection()
+        if is_face_model:
+            face_encoder = FaceDetection(model_name = data["model"])
             result = face_encoder.url_file_prediction(url = data["url"])
             self.logger.debug(f"Face prediction: {result}")
             result = result.model_dump()

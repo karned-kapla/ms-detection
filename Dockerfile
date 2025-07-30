@@ -27,11 +27,21 @@ COPY src src
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY models models
+RUN mkdir -p /app/models && \
+    curl -L -o /app/models/yolo11n.pt https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11n.pt && \
+    curl -L -o /app/models/yolo11s.pt https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11s.pt && \
+    curl -L -o /app/models/yolo11m.pt https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11m.pt && \
+    curl -L -o /app/models/yolo11l.pt https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11l.pt && \
+    curl -L -o /app/models/yolo11x.pt https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11x.pt
+
+# Pre-download InsightFace buffalo_l model
+RUN mkdir -p /root/.insightface/models && \
+    mkdir -p /app/.insightface/models && \
+    python -c "from insightface.app import FaceAnalysis; FaceAnalysis(name='buffalo_l').prepare(ctx_id=0)" && \
+    cp -r /root/.insightface/models/* /app/.insightface/models/
 
 RUN chown -R worker:worker /app
 
 USER worker
 
 ENTRYPOINT ["python", "main.py"]
-
