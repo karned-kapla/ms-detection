@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM python:3.11-bullseye
 
 ENV LANG=C.UTF-8 \
     PYTHONUNBUFFERED=1 \

@@ -3,3 +3,7 @@
 .venv
 /models
 /artefacts
+__pycache__
+.debug
+.dev
+.DS_Store
