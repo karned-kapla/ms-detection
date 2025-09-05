@@ -13,6 +13,8 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    python3-dev \
+    python3-pip \
     libgl1-mesa-dri \
     libglib2.0-0 \
     curl \
@@ -23,13 +25,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxrender-dev \
     libgomp1 \
     && rm -rf /var/lib/apt/lists/*
-
+    
 RUN useradd -m worker
 
 COPY requirements.txt main.py ./
 COPY config config
 COPY src src
 
+RUN pip install --upgrade pip setuptools wheel && pip install -U numpy
 RUN pip install --no-cache-dir -r requirements.txt
 
 RUN mkdir -p /app/models && \
